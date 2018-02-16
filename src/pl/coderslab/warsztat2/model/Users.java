@@ -1,5 +1,10 @@
 package pl.coderslab.warsztat2.model;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.mindrot.jbcrypt.BCrypt;
 
 public class Users {
@@ -7,8 +12,8 @@ public class Users {
 	private String username = "";
 	private String email = "";
 	private String password = "";
-	private int person_group_id = 0;
-	
+	private int personGroupId = 0;
+
 	public Users() {
 	}
 
@@ -42,22 +47,81 @@ public class Users {
 	public void setPassword(String password) {
 		this.password = BCrypt.hashpw(password, BCrypt.gensalt());
 	}
-	
-	public boolean isPasswordCorrect(final String candidate){
+
+	public boolean isPasswordCorrect(final String candidate) {
 		return BCrypt.checkpw(candidate, this.password);
 	}
 
-	public int getPerson_group_id() {
-		return person_group_id;
+	public int getPersonGroupId() {
+		return personGroupId;
 	}
 
-	public void setPerson_group_id(int person_group_id) {
-		this.person_group_id = person_group_id;
+	public void setPersonGroupId(int personGroupId) {
+		this.personGroupId = personGroupId;
 	}
 
 	public int getId() {
 		return id;
 	}
+
+	public void save(Connection conn) throws SQLException {
+		if (this.id == 0) {
+			final String[] generatedKeys = { "id" };
+			final String sql = "INSERT INTO users(id, username, email, password, person_group_id)"
+					+ "VALUES(default, ?, ?, ?, ?);";
+			PreparedStatement ps = conn.prepareStatement(sql, generatedKeys);
+			ps.setString(1, this.username);
+			ps.setString(2, this.email);
+			ps.setString(3, this.password);
+			ps.setInt(4, this.personGroupId);
+			ps.executeUpdate();
+			ResultSet rs = ps.getGeneratedKeys();
+			if (rs.next()) {
+				this.id = rs.getInt(1);
+			}
+
+			rs.close();
+			ps.close();
+		} else {
+			final String sql = "UPDATE users SET username = ?, email = ?, password = ?, person_group_id = ? "
+					+ "WHERE id = ?;";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, this.username);
+			ps.setString(2, this.email);
+			ps.setString(3, this.password);
+			ps.setInt(4, this.personGroupId);
+			ps.setInt(5, this.id);
+			ps.executeUpdate();
+			ps.close();
+		}
+	}
+
+	public static Users getById(int id, Connection conn) throws SQLException {
+
+		Users user = null;
+		if (id > 0) {
+			final String sql = "SELECT id, username, email, password, person_group_id " + "FROM users WHERE id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, id);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				user = new Users();
+				user.id = rs.getInt("id");
+				user.email = rs.getString("email");
+				user.password = rs.getString("password");
+				user.personGroupId = rs.getInt("person_group_id");
+			}
+			rs.close();
+			ps.close();
+		}
+		return user;
+	}
+
+	@Override
+	public String toString() {
+		return "Users [id=" + id + ", username=" + username + ", email=" + email + ", password=" + password
+				+ ", personGroupId=" + personGroupId + "]";
+	}
 	
-	
+
 }
