@@ -1,9 +1,11 @@
 package pl.coderslab.warsztat2.model;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -17,11 +19,12 @@ public class Users {
 	public Users() {
 	}
 
-	public Users(String username, String email, String password) {
+	public Users(String username, String email, String password, int personGroupId) {
 		super();
 		this.username = username;
 		this.email = email;
 		setPassword(password);
+		setPersonGroupId(personGroupId);
 	}
 
 	public String getUsername() {
@@ -57,7 +60,16 @@ public class Users {
 	}
 
 	public void setPersonGroupId(int personGroupId) {
-		this.personGroupId = personGroupId;
+		try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/krks02_warsztat2?useSSL=false",
+				"root", "coderslab")) {
+			if (UsersGroup.getById(personGroupId, conn) == null){
+				this.personGroupId = -1;
+			} else {
+				this.personGroupId = personGroupId;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public int getId() {
@@ -67,7 +79,7 @@ public class Users {
 	public void save(Connection conn) throws SQLException {
 		if (this.id == 0) {
 			final String[] generatedKeys = { "id" };
-			final String sql = "INSERT INTO users(id, username, email, password, person_group_id)"
+			final String sql = "INSERT INTO users(id, username, email, password, person_group_id) "
 					+ "VALUES(default, ?, ?, ?, ?);";
 			PreparedStatement ps = conn.prepareStatement(sql, generatedKeys);
 			ps.setString(1, this.username);
@@ -122,6 +134,36 @@ public class Users {
 		return "Users [id=" + id + ", username=" + username + ", email=" + email + ", password=" + password
 				+ ", personGroupId=" + personGroupId + "]";
 	}
-	
+
+	public static Users[] getAll(Connection conn) throws SQLException {
+		ArrayList<Users> users = new ArrayList<Users>();
+		final String sql = "SELECT * FROM users;";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		while (rs.next()) {
+			Users user = new Users();
+			user.id = rs.getInt("id");
+			user.email = rs.getString("email");
+			user.password = rs.getString("password");
+			user.personGroupId = rs.getInt("person_group_id");
+			users.add(user);
+		}
+		ps.close();
+		rs.close();
+		Users[] arrUsers = new Users[users.size()];
+		arrUsers = users.toArray(arrUsers);
+		return arrUsers;
+	}
+
+	public void delete(Connection conn) throws SQLException {
+		if (this.id != 0) {
+			final String sql = "DELETE FROM users WHERE id = ?;";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, this.id);
+			ps.executeUpdate();
+			ps.close();
+			this.id = 0;
+		}
+	}
 
 }
