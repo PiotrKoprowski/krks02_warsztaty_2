@@ -62,7 +62,7 @@ public class Users {
 	public void setPersonGroupId(int personGroupId) {
 		try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/krks02_warsztat2?useSSL=false",
 				"root", "coderslab")) {
-			if (UsersGroup.getById(personGroupId, conn) == null){
+			if (UsersGroup.getGroupById(personGroupId, conn) == null) {
 				this.personGroupId = -1;
 			} else {
 				this.personGroupId = personGroupId;
@@ -164,6 +164,27 @@ public class Users {
 			ps.close();
 			this.id = 0;
 		}
+	}
+
+	public static Users[] getAllUsersByGroupId(int user_id, Connection conn) throws SQLException {
+		ArrayList<Users> users = new ArrayList<Users>();
+		final String sql = "SELECT * FROM users WHERE person_group_id = ?;";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, user_id);
+		ResultSet rs = ps.executeQuery();
+		while (rs.next()) {
+			Users user = new Users();
+			user.id = rs.getInt("id");
+			user.email = rs.getString("email");
+			user.password = rs.getString("password");
+			user.personGroupId = rs.getInt("person_group_id");
+			users.add(user);
+		}
+		ps.close();
+		rs.close();
+		Users[] arrUsers = new Users[users.size()];
+		arrUsers = users.toArray(arrUsers);
+		return arrUsers;
 	}
 
 }

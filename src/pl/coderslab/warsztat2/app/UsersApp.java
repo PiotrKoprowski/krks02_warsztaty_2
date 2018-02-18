@@ -5,23 +5,23 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import pl.coderslab.warsztat2.model.Users;
+import pl.coderslab.warsztat2.model.UsersGroup;
 
 public class UsersApp {
 
 	public static void main(String[] args) {
 		try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/krks02_warsztat2?useSSL=false",
 				"root", "coderslab")) {
-			testGetAll(conn);
-			//testDelete(2, conn);
-			//testGetAll(conn);
+			// deleteUser(2, conn);
+			// detAllUsers(conn);
+			// daveUser(conn);
+			getAllUsers(conn);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		// test();
-
 	}
 
-	private static void testSave(Connection conn) throws SQLException {
+	private static void saveUser(Connection conn) throws SQLException {
 		Users user = new Users("rafal", "rafal@mail.com", "rafal", 1);
 		user.save(conn);
 		Users user2 = new Users("rafal2", "rafal2@mail.com", "rafal", 1);
@@ -38,25 +38,30 @@ public class UsersApp {
 		System.out.println(user.isPasswordCorrect("rafa"));
 		System.out.println(user.isPasswordCorrect("rafal"));
 	}
-	
-	private static void testGetById(int id, Connection conn) throws SQLException {
+
+	private static void getUserById(int id, Connection conn) throws SQLException {
 		Users user = Users.getById(id, conn);
 		System.out.println(user);
 	}
-	
-	private static void testGetAll(Connection conn) throws SQLException {
+
+	private static void getAllUsers(Connection conn) throws SQLException {
 		Users[] users = Users.getAll(conn);
-		//Users user = Users.getById(5, conn);
-		for(int i = 0; i < users.length; i++){
+		for (int i = 0; i < users.length; i++) {
 			System.out.println(users[i]);
 		}
 	}
-	
-	private static void testDelete(int id, Connection conn) throws SQLException {
+
+	private static void deleteUser(int id, Connection conn) throws SQLException {
 		Users user = Users.getById(id, conn);
 		System.out.println(user);
 		user.delete(conn);
 		System.out.println("Użytkownik usunięty!");
 	}
-	
+
+	private static void getAllUsersByGroupId(int user_id, Connection conn) throws SQLException {
+		Users[] users = Users.getAllUsersByGroupId(user_id, conn);
+		for (int i = 0; i < users.length; i++) {
+			System.out.println(users[i]);
+		}
+	}
 }

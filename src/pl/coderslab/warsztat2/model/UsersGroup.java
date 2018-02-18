@@ -9,7 +9,13 @@ import java.util.ArrayList;
 public class UsersGroup {
 	private int id = 0;
 	private String name = null;
-	
+
+	public UsersGroup() {
+	}
+
+	public UsersGroup(String name) {
+		this.name = name;
+	}
 
 	public String getName() {
 		return name;
@@ -23,11 +29,10 @@ public class UsersGroup {
 		return id;
 	}
 
-	public void save(Connection conn) throws SQLException {
+	public void saveGroup(Connection conn) throws SQLException {
 		if (this.id == 0) {
 			final String[] generatedKeys = { "id" };
-			final String sql = "INSERT INTO usersGroup(id, name) "
-					+ "VALUES(default, ?);";
+			final String sql = "INSERT INTO usersGroup(id, name) " + "VALUES(default, ?);";
 			PreparedStatement ps = conn.prepareStatement(sql, generatedKeys);
 			ps.setString(1, this.name);
 			ps.executeUpdate();
@@ -38,8 +43,7 @@ public class UsersGroup {
 			rs.close();
 			ps.close();
 		} else {
-			final String sql = "UPDATE usersGroup SET name = ? "
-					+ "WHERE id = ?;";
+			final String sql = "UPDATE usersGroup SET name = ? " + "WHERE id = ?;";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, this.name);
 			ps.setInt(2, this.id);
@@ -47,8 +51,8 @@ public class UsersGroup {
 			ps.close();
 		}
 	}
-	
-	public static UsersGroup getById(int id, Connection conn) throws SQLException {
+
+	public static UsersGroup getGroupById(int id, Connection conn) throws SQLException {
 
 		UsersGroup usersGroup = null;
 		if (id > 0) {
@@ -66,8 +70,8 @@ public class UsersGroup {
 		}
 		return usersGroup;
 	}
-	
-	public static UsersGroup[] getAll(Connection conn) throws SQLException {
+
+	public static UsersGroup[] getAllGroups(Connection conn) throws SQLException {
 		ArrayList<UsersGroup> usersGroup = new ArrayList<UsersGroup>();
 		final String sql = "SELECT * FROM usersGroup;";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -83,6 +87,22 @@ public class UsersGroup {
 		UsersGroup[] arrGroups = new UsersGroup[usersGroup.size()];
 		arrGroups = usersGroup.toArray(arrGroups);
 		return arrGroups;
+	}
+
+	public void deleteGroup(Connection conn) throws SQLException {
+		if (this.id != 0) {
+			final String sql = "DELETE FROM usersGroup WHERE id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, id);
+			ps.executeUpdate();
+			ps.close();
+			this.id = 0;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "UsersGroup [id=" + id + ", name=" + name + "]";
 	}
 
 }
